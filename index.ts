@@ -12,22 +12,29 @@ async function printFile(name: string) {
 async function writeToFile(name: string, content: string) {
     writeFile(`${outputCode.path}/${name}`, content);
 }
+async function splitCommentsAndCode(lines: string[]) {
+    const comments = [];
+    const code = [];
+    lines.map(line => {
+        if (line.includes("//")) {
+            const start = line.indexOf("//");
+            const cutLine = line.slice(start);
+            const restLine = line.slice(0, start);
+            comments.push(cutLine + '\n');
+            if (restLine.length > 0) {
+                code.push(restLine + '\n');
+            }
+        } else {
+            code.push(line + '\n');
+        }
+    })
+    return { comments, code };
+}
+
 (async () => {
     const content = await printFile(inputFile.name)
     const lines = content.split('\n')
-    const comments = lines.map(line => {
-        const start = line.indexOf("//");
-        const end = line.indexOf("\n");
-        const linebreak = line.includes("//") ? '\n' : '';
-        return line.slice(start, end) + linebreak
-    }).join("")
-    const code = lines.map(line => {
-        const start = 0;
-        const end = line.indexOf("//") === -1 ? line.indexOf("\n") : line.indexOf("//");
-        const linebreak = !line.includes("//") ? '\n' : '';
-        return line.slice(start, end) + linebreak
-    }).join("")
-
-    await writeToFile(outputCode.name, code)
-    await writeToFile(outputComments.name, comments)
+    const { comments, code } = await splitCommentsAndCode(lines)
+    await writeToFile(outputCode.name, code.join(""))
+    await writeToFile(outputComments.name, comments.join(""))
 })();
