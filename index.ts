@@ -1,26 +1,33 @@
-import _ from 'lodash'
+import { readFile, writeFile } from 'node:fs/promises';
+import config from 'config';
 
-function checkArgs(min: number, max: number, length: number) {
-    min = Math.floor(min);
-    max = Math.floor(max);
-    length = Math.floor(length);
-    if (min > max) {
-        min = max - length + 1;
-    }
-    const diff = max - min;
-    const minDiff = length - 1;
-    if (diff < minDiff) {
-        min = max - minDiff;
-    }
-    return [min, max]
+const inputFile = config.get<{path: string, name: string}>('inputFile');
+const outputCode = config.get<{path: string, name: string}>('outputCode');
+const outputComments = config.get<{path: string, name: string}>('outputComments');
+
+async function printFile(name: string) {
+    return await readFile(`${inputFile.path}/${name}`, {encoding: "utf8"});
+    
 }
+async function writeToFile(name: string, content: string) {
+    writeFile(`${outputCode.path}/${name}`, content);
+}
+(async () => {
+    const content = await printFile(inputFile.name)
+    const lines = content.split('\n')
+    const comments = lines.map(line => {
+        const start = line.indexOf("//");
+        const end = line.indexOf("\n");
+        const linebreak = line.includes("//") ? '\n' : '';
+        return line.slice(start, end) + linebreak
+    }).join("")
+    const code = lines.map(line => {
+        const start = 0;
+        const end = line.indexOf("//") === -1 ? line.indexOf("\n") : line.indexOf("//");
+        const linebreak = !line.includes("//") ? '\n' : '';
+        return line.slice(start, end) + linebreak
+    }).join("")
 
-const {argv} = process;
-
-const length: number = +argv[2] >= 1 ? +argv[2] : 7;
-const min: number = +argv[3] && typeof +argv[3] === 'number' ? +argv[3] : 1;
-const max: number = +argv[4] && typeof +argv[4] === 'number' ? +argv[4] : 49;
-const [checkedMin, checkedMax] = checkArgs(min, max, length)
-const a: number[] = _.sampleSize(_.range(checkedMin, checkedMax + 1), length);
-
-console.log("random numbers are", a);
+    await writeToFile(outputCode.name, code)
+    await writeToFile(outputComments.name, comments)
+})();

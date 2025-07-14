@@ -1,0 +1,2 @@
+let abcd: number;
+const lmn = 5 
