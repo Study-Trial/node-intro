@@ -1,6 +1,9 @@
 import _ from 'lodash'
 
 function checkArgs(min: number, max: number, length: number) {
+    min = Math.floor(min);
+    max = Math.floor(max);
+    length = Math.floor(length);
     if (min > max) {
         min = max - length + 1;
     }
