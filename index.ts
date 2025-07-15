@@ -1,17 +1,18 @@
 import { readFile, writeFile } from 'node:fs/promises';
 import config from 'config';
 
-const inputFile = config.get<{path: string, name: string}>('inputFile');
-const outputCode = config.get<{path: string, name: string}>('outputCode');
-const outputComments = config.get<{path: string, name: string}>('outputComments');
+const inputFile = config.get<{ path: string, name: string }>('inputFile');
+const outputCode = config.get<{ path: string, name: string }>('outputCode');
+const outputComments = config.get<{ path: string, name: string }>('outputComments');
 
 async function readInputFile(name: string) {
-    return await readFile(`${inputFile.path}/${name}`, {encoding: "utf8"});
-    
+    return readFile(`${inputFile.path}/${name}`, { encoding: "utf8" });
 }
+
 async function writeToFile(name: string, content: string) {
     writeFile(`${outputCode.path}/${name}`, content);
 }
+
 function splitCommentsAndCode(lines: string[]) {
     const comments = [];
     const code = [];
@@ -33,16 +34,16 @@ function splitCommentsAndCode(lines: string[]) {
 }
 
 (async () => {
-    try{
-    const content = await readInputFile(inputFile.name)
-    const lines = content.split('\n')
-    const { comments, code } = splitCommentsAndCode(lines)
-    await Promise.all([
-        writeToFile(outputCode.name, code.join("")),
-        writeToFile(outputComments.name, comments.join(""))
-    ])
+    try {
+        const content = await readInputFile(inputFile.name)
+        const lines = content.split('\n')
+        const { comments, code } = splitCommentsAndCode(lines)
+        await Promise.all([
+            writeToFile(outputCode.name, code.join("")),
+            writeToFile(outputComments.name, comments.join(""))
+        ])
     }
     catch (error) {
-        console.log(error.message);
+        console.log(`Error: ${error.message}`);
     }
 })();
