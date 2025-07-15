@@ -1,26 +1,47 @@
 import _ from 'lodash'
 
-function checkArgs(min: number, max: number, length: number) {
-    min = Math.floor(min);
-    max = Math.floor(max);
-    length = Math.floor(length);
+function checkArgsValid(min: number, max: number, length: number) {
+    if (length < 1) {
+        throw new Error(`length is less than 1: ${length}`);
+    }
     if (min > max) {
-        min = max - length + 1;
+        throw new Error(`min is greater than max: ${min} > ${max}`);
     }
     const diff = max - min;
     const minDiff = length - 1;
     if (diff < minDiff) {
-        min = max - minDiff;
+        throw new Error(`length is greater than the difference between min and max: ${length} > ${diff}`);
     }
-    return [min, max]
+    return [min, max, length];
+}
+
+function checkArgsNumber(arg: string) {
+    const num = +arg;
+    if (!_.isInteger(num)) {
+        throw new Error(`Argument is not a valid number: ${arg}`);
+    }
+    return num;
 }
 
 const {argv} = process;
-
-const length: number = +argv[2] >= 1 ? +argv[2] : 7;
-const min: number = +argv[3] && typeof +argv[3] === 'number' ? +argv[3] : 1;
-const max: number = +argv[4] && typeof +argv[4] === 'number' ? +argv[4] : 49;
-const [checkedMin, checkedMax] = checkArgs(min, max, length)
-const a: number[] = _.sampleSize(_.range(checkedMin, checkedMax + 1), length);
-
+const DEFAULT_LENGTH = 7;
+const DEFAULT_MIN = 1;
+const DEFAULT_MAX = 49;
+const defaultValues = [DEFAULT_LENGTH, DEFAULT_MIN, DEFAULT_MAX];
+const args: string[] = [argv[2], argv[3], argv[4]];
+try{
+const [length, min, max] = args.map((arg, i) => {
+    if (arg) {
+        return checkArgsNumber(arg);
+    }
+    else {
+        return defaultValues[i];
+    }
+});
+const [checkedMin, checkedMax, checkedLength] = checkArgsValid(min, max, length)
+const a: number[] = _.sampleSize(_.range(checkedMin, checkedMax + 1), checkedLength);
 console.log("random numbers are", a);
+}
+catch (error) {
+    console.log(error.message);
+}
