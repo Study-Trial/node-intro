@@ -1,3 +1,0 @@
-//abcd is a varible of type number
-let abcd: number;
-const lmn = 5 //constant lmn contains value 5

@@ -1,49 +1,34 @@
-import { readFile, writeFile } from 'node:fs/promises';
-import config from 'config';
+import Logger from "./Logger.ts";
+import fs from "node:fs"
 
-const inputFile = config.get<{ path: string, name: string }>('inputFile');
-const outputCode = config.get<{ path: string, name: string }>('outputCode');
-const outputComments = config.get<{ path: string, name: string }>('outputComments');
+const logger = new Logger();
 
-async function readInputFile(name: string) {
-    return readFile(`${inputFile.path}/${name}`, { encoding: "utf8" });
-}
+console.log("test 1 - log level is warn, message is debug, expected output: nothing")
+logger.addHandlerMessage((obj) => console.log(obj.message));
+logger.addHandlerLevel("debug", (message) => fs.writeFileSync("logs.txt", '\n' + message, {flag:"a"}))
+logger.log("debug", "kukureku");
+logger.removeAllListeners();
 
-async function writeToFile(name: string, content: string) {
-    writeFile(`${outputCode.path}/${name}`, content);
-}
+console.log("test 2 - log level is warn, message is info, expected output: nothing")
+logger.addHandlerMessage((obj) => console.log(obj.message));
+logger.addHandlerLevel("info", (message) => fs.writeFileSync("logs.txt", '\n' + message, {flag:"a"}))
+logger.log("info", "kukureku");
+logger.removeAllListeners();
 
-function splitCommentsAndCode(lines: string[]) {
-    const comments = [];
-    const code = [];
-    lines.reduce((acc, line) => {
-        const start = line.indexOf("//");
-        if (start > -1) {
-            const cutLine = line.slice(start);
-            const restLine = line.slice(0, start);
-            comments.push(cutLine + '\n');
-            if (restLine.length > 0) {
-                code.push(restLine + '\n');
-            }
-        } else {
-            code.push(line + '\n');
-        }
-        return acc;
-    }, { comments: [], code: [] });
-    return { comments, code };
-}
+console.log("test 3 - log level is warn, message is warn, expected output: warn message")
+logger.addHandlerMessage((obj) => console.log(obj.message));
+logger.addHandlerLevel("warn", (message) => fs.writeFileSync("logs.txt", '\n' + message, {flag:"a"}))
+logger.log("warn", "kukureku");
+logger.removeAllListeners();
 
-(async () => {
-    try {
-        const content = await readInputFile(inputFile.name)
-        const lines = content.split('\n')
-        const { comments, code } = splitCommentsAndCode(lines)
-        await Promise.all([
-            writeToFile(outputCode.name, code.join("")),
-            writeToFile(outputComments.name, comments.join(""))
-        ])
-    }
-    catch (error) {
-        console.log(`Error: ${error.message}`);
-    }
-})();
+console.log("test 4 - log level is warn, message is trace, expected output: nothing")
+logger.addHandlerMessage((obj) => console.log(obj.message));
+logger.addHandlerLevel("trace", (message) => fs.writeFileSync("logs.txt", '\n' + message, {flag:"a"}))
+logger.log("trace", "kukureku");
+logger.removeAllListeners();
+
+console.log("test 5 - log level is warn, message is severe, expected output: severe message")
+logger.addHandlerMessage((obj) => console.log(obj.message));
+logger.addHandlerLevel("severe", (message) => fs.writeFileSync("logs.txt", '\n' + message, {flag:"a"}))
+logger.log("severe", "kukureku");
+logger.removeAllListeners();

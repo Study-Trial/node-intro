@@ -1,2 +1,0 @@
-//abcd is a varible of type number
-//constant lmn contains value 5

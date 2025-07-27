@@ -1,14 +1,3 @@
 {
-    "inputFile" : {
-        "path":"input",
-        "name":"input.txt"
-    },
-    "outputCode" : {
-        "path":"output",
-        "name":"outputCode.txt"
-    },
-    "outputComments" : {
-        "path":"output",
-        "name":"outputComments.txt"
-    }
+    "log_level": "warn"
 }
