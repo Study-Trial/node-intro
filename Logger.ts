@@ -4,9 +4,10 @@ import config from 'config';
 export type LogLevel = "severe"|"warn"|"info"|"debug"|"trace"
 
 const LOG_LEVELS = ["severe", "warn", "info", "debug", "trace"];
-const LOG_LEVEL_CONFIG = config.get<LogLevel>("log_level");
-const LOG_LEVEL_INDEX = LOG_LEVELS.indexOf(LOG_LEVEL_CONFIG);
 const DEFAULT_LOG_LEVEL = "info";
+const logLevelConfig = config.get<string>("log_level");
+const logLevelConfigIndex = LOG_LEVELS.indexOf(logLevelConfig);
+const LOG_LEVEL_INDEX = logLevelConfigIndex > -1 ? logLevelConfigIndex : 2;
 
 class Logger extends EventEmitter {
      addHandlerLevel(level: LogLevel, handler: (message: string)=>void): void {
