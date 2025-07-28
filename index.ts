@@ -1,34 +1,64 @@
-import Logger from "./Logger.ts";
-import fs from "node:fs"
+import {Readable, Writable, Transform} from "node:stream";
+import {pipeline} from "node:stream/promises"
+import { TransformCallback } from "stream";
+class NumbersStream extends Readable {
+   private _counter = 0;
+    constructor() {
+        super({objectMode: true})
+    }
+    _read(): void {
+        this.push(this._counter++)
+    }
+}
+class EvenNumbers extends Transform {
+    constructor() {
+        super({objectMode: true})
+    }
+    _transform(chunk: any, encoding: BufferEncoding, callback: TransformCallback): void {
+        if (chunk % 2 == 0) {
+            this.push(chunk);
+           
+        }
+        callback()
+    }
+}
+class Limit extends Transform {
+    private _counter = 0;
+    constructor(private _limit: number) {
+        super({objectMode: true})
+    }
+    _transform(chunk: any, encoding: BufferEncoding, callback: TransformCallback): void {
+        if(this._counter >= this._limit) {
+            this.push(null)
+        } else {
+            this.push(chunk);
+            this._counter++;
+            callback(); 
+        }
+        
+       
 
-const logger = new Logger();
+    }
+}
+class OutputNumbers extends Writable {
+    constructor() {
+        super({objectMode: true})
+    }
+    _write(chunk: any, encoding: BufferEncoding, callback: (error?: Error | null) => void): void {
+        process.stdout.write(chunk + "; ");
+        callback();
+    }
+    _final(): void {
+        process.stdout.write("\n");
+    }
+}
+async function displayEvenNumbers(count: number): Promise<void> {
+    await pipeline(
+        new NumbersStream(),
+        new EvenNumbers(),
+        new Limit(count),
+        new OutputNumbers()
+    )
+}
+displayEvenNumbers(100).catch(err => console.log(err));
 
-console.log("test 1 - log level is warn, message is debug, expected output: nothing")
-logger.addHandlerMessage((obj) => console.log(obj.message));
-logger.addHandlerLevel("debug", (message) => fs.writeFileSync("logs.txt", '\n' + message, {flag:"a"}))
-logger.log("debug", "kukureku");
-logger.removeAllListeners();
-
-console.log("test 2 - log level is warn, message is info, expected output: nothing")
-logger.addHandlerMessage((obj) => console.log(obj.message));
-logger.addHandlerLevel("info", (message) => fs.writeFileSync("logs.txt", '\n' + message, {flag:"a"}))
-logger.log("info", "kukureku");
-logger.removeAllListeners();
-
-console.log("test 3 - log level is warn, message is warn, expected output: warn message")
-logger.addHandlerMessage((obj) => console.log(obj.message));
-logger.addHandlerLevel("warn", (message) => fs.writeFileSync("logs.txt", '\n' + message, {flag:"a"}))
-logger.log("warn", "kukureku");
-logger.removeAllListeners();
-
-console.log("test 4 - log level is warn, message is trace, expected output: nothing")
-logger.addHandlerMessage((obj) => console.log(obj.message));
-logger.addHandlerLevel("trace", (message) => fs.writeFileSync("logs.txt", '\n' + message, {flag:"a"}))
-logger.log("trace", "kukureku");
-logger.removeAllListeners();
-
-console.log("test 5 - log level is warn, message is severe, expected output: severe message")
-logger.addHandlerMessage((obj) => console.log(obj.message));
-logger.addHandlerLevel("severe", (message) => fs.writeFileSync("logs.txt", '\n' + message, {flag:"a"}))
-logger.log("severe", "kukureku");
-logger.removeAllListeners();
