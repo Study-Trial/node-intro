@@ -5,7 +5,7 @@ export type LogLevel = "severe"|"warn"|"info"|"debug"|"trace"
 
 const LOG_LEVELS = ["severe", "warn", "info", "debug", "trace"];
 const DEFAULT_LOG_LEVEL = "info";
-const logLevelConfig = config.get<string>("log_level");
+const logLevelConfig = config.has("log_level") ? config.get<string>("log_level") : DEFAULT_LOG_LEVEL;
 const logLevelConfigIndex = LOG_LEVELS.indexOf(logLevelConfig);
 const LOG_LEVEL_INDEX = logLevelConfigIndex > -1 ? logLevelConfigIndex : 2;
 
