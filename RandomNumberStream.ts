@@ -4,16 +4,17 @@ import config from 'config'
 
 export default class RandomNumberStream extends Readable {
 
-    constructor(private amount: number, private isUnique: boolean = false, private min?: number, private max?: number, options: any = {encoding: 'utf8'}) {
+    constructor(private amount: number, private min?: number, private max?: number, private isUnique?: boolean, options?: any) {
         super(options);
         this.validateAndSetDefaults();
     }
 
     private DEFAULT_VALUES = [
-        config.get<number>('default_min'), 
-        config.get<number>('default_max'), 
-        config.get<number>('default_length')
+        config.has('default_min') ? config.get<number>('default_min') : 1, 
+        config.has('default_max') ? config.get<number>('default_max') : 49, 
+        config.has('default_length') ? config.get<number>('default_length') : 7
     ];
+    private IS_UNIQUE = this.isUnique ?? false;
 
     private numberArray: number[] = [];
     private validatedLength: number;
@@ -39,7 +40,7 @@ export default class RandomNumberStream extends Readable {
             this.push(null);
         } else {
             let number: number;
-            if (!this.isUnique) {
+            if (!this.IS_UNIQUE) {
                 number = _.random(this.validatedMin, this.validatedMax);
             }
             else {
@@ -73,7 +74,7 @@ function checkArgsValid(min: number, max: number, length: number, isUnique: bool
 
 function checkArgsNumber(arg: number) : number {
     if (!_.isInteger(arg)) {
-        throw new Error(`Argument is not a valid number: ${arg}`);
+        throw new Error(`Argument is not a valid integer: ${arg}`);
     }
     return arg;
 }
