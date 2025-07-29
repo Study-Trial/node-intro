@@ -9,10 +9,14 @@ export default class RandomNumberStream extends Readable {
         this.validateAndSetDefaults();
     }
 
+    private DEFAULT_MIN = 1;
+    private DEFAULT_MAX = 49;
+    private DEFAULT_LENGTH = 7;
+
     private DEFAULT_VALUES = [
-        config.has('default_min') ? config.get<number>('default_min') : 1, 
-        config.has('default_max') ? config.get<number>('default_max') : 49, 
-        config.has('default_length') ? config.get<number>('default_length') : 7
+        config.has('default_min') ? config.get<number>('default_min') : this.DEFAULT_MIN, 
+        config.has('default_max') ? config.get<number>('default_max') : this.DEFAULT_MAX, 
+        config.has('default_length') ? config.get<number>('default_length') : this.DEFAULT_LENGTH
     ];
     private IS_UNIQUE = this.isUnique ?? false;
 
