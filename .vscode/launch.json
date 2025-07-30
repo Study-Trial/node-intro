@@ -13,8 +13,7 @@
                 "--loader",
                 "ts-node/esm"
             ],
-            "program": "${workspaceFolder}\\index.ts",
-            "args": ["kuku"]
+            "program": "${workspaceFolder}\\src\\controller\\index.ts",
            
         }
     ]

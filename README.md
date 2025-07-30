@@ -1,7 +1,15 @@
-# HW#5 Displaying out random unique numbers using asynchronous pipeline (see CW #5)
-## Think of the following
-### 1. Structure of the modules
-### 2. Where should be done getting params from the configuration
-### 3. Where should be done validation
-### 4. Single errors handling
-### 5. Try to work out the simplest and reusable possible solution
+# HW#6 Calculator on HTTP server
+## Protocol
+### JSON inside request containing
+- operation like "*", "-", "+", "/" <br>
+- first operand as a number <br>
+- second operand as a number
+## Controller (index.js)
+### controller reponsibility
+- receive the data as JSON inside a request <br>
+- validate the data structure (operation as a string, first and second operands as the strings) <br>
+- in the case of invalid data structure, send reponse with status 400 with an appropriate message <br>
+- in the case of valid data structure, call the method of the service "compute" receiving data as an object {operation: string, op1: number, op2: number} and returning result or throwing exception saying about missing operation<br>
+- send back appropriate response
+### service responsibility
+- implementation of method "compute" explained above

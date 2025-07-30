@@ -7,7 +7,7 @@
   "type": "module",
   "main": "index.ts",
   "scripts": {
-    "dev": "node --no-warnings --loader ts-node/esm index.ts"
+    "dev": "node --no-warnings --loader ts-node/esm src/controller/index.ts"
   },
   "dependencies": {
     "@types/config": "^3.3.5",
