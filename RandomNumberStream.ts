@@ -26,14 +26,10 @@ export default class RandomNumberStream extends Readable {
     private validatedMax: number;
 
     private validateAndSetDefaults(): void {
-        const [min, max, length] = [this.min, this.max, this.amount].map((value, i) => {
-            if (value || value === 0) {
-                return checkArgsNumber(value);
-            } else {
-                return this.DEFAULT_VALUES[i];
-            }
-        });
-        const [checkedMin, checkedMax, checkedLength] = checkArgsValid(min, max, length, this.isUnique);
+        const args = [this.min, this.max, this.amount];
+        const defaultValues = this.DEFAULT_VALUES;
+        const [min, max, length] = args.map((arg, i) => arg || arg === 0 ? getArgNumber(arg) : defaultValues[i]);
+        const [checkedMin, checkedMax, checkedLength] = getArgsValid(min, max, length, this.IS_UNIQUE);
         this.validatedMin = checkedMin;
         this.validatedMax = checkedMax;
         this.validatedLength = checkedLength;
@@ -59,7 +55,7 @@ export default class RandomNumberStream extends Readable {
     }
 }
 
-function checkArgsValid(min: number, max: number, length: number, isUnique: boolean) : [number, number, number] {
+function getArgsValid(min: number, max: number, length: number, isUnique: boolean) : [number, number, number] {
     if (length < 1) {
         throw new Error(`length is less than 1: ${length}`);
     }
@@ -76,7 +72,7 @@ function checkArgsValid(min: number, max: number, length: number, isUnique: bool
     return [min, max, length];
 }
 
-function checkArgsNumber(arg: number) : number {
+function getArgNumber(arg: number) : number {
     if (!_.isInteger(arg)) {
         throw new Error(`Argument is not a valid integer: ${arg}`);
     }
