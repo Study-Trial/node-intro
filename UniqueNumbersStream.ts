@@ -1,7 +1,7 @@
 import { Transform, TransformCallback } from "node:stream";
 
 export class UniqueNumbersStream extends Transform {
-    constructor(private limit?: number) {
+    constructor(private limit: number) {
         super({ objectMode: true })
     }
     private _numberArray: number[] = [];

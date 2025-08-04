@@ -26,8 +26,9 @@ function validateAndSetDefaults(min: number, max: number, length: number, defaul
     return getArgsValid(validatedMin, validatedMax, validatedLength);
 }
 
-async function displayRandomNumbers(length: number, min?: number, max?: number): Promise<void> {
+async function displayRandomNumbers(length: number, min?: number, max?: number, separator?: string): Promise<void> {
 
+    const SEPARATOR = separator ?? "; ";
     const DEFAULT_MIN = 1;
     const DEFAULT_MAX = 49;
     const DEFAULT_LENGTH = 7;
@@ -42,17 +43,16 @@ async function displayRandomNumbers(length: number, min?: number, max?: number):
         throw new Error(`length is greater than the range between min and max: ${validatedLength} > ${possibleRange}`);
     }
     try {
-        await outputRandomNumbersPipeline(validatedLength, validatedMin, validatedMax);
+        await outputRandomNumbersPipeline(validatedLength, validatedMin, validatedMax, SEPARATOR);
     } catch (error) {
-        console.error(error);
+        console.log(error.message);
     }
-
 }
 
 // Test 1: Basic functionality
 setTimeout(() => {
     console.log("Basic functionality");
-    displayRandomNumbers(5, 1, 10).catch(err => console.log(err.message));
+    displayRandomNumbers(5, 1, 10, "|").catch(err => console.log(err.message));
 }, 1000);
 
 // Test 2: Edge case - length = 0
