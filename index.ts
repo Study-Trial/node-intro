@@ -1,56 +1,5 @@
-import { Readable, Writable, Transform, TransformCallback } from "node:stream";
-import { pipeline } from "node:stream/promises"
-import _ from 'lodash'
 import config from 'config'
-
-class NumbersStream extends Readable {
-    constructor(private _validatedMin: number, private _validatedMax: number) {
-        super({ objectMode: true })
-    }
-    _read(): void {
-        if (this._validatedMin > this._validatedMax) {
-            throw new Error(`min is greater than max: ${this._validatedMin} > ${this._validatedMax}`);
-        } else if (this._validatedMin === this._validatedMax) {
-            throw new Error(`min and max are the same: ${this._validatedMin} = ${this._validatedMax}`);
-        }
-        const number = _.random(this._validatedMin, this._validatedMax);
-        this.push(number)
-    }
-}
-
-class UniqueNumbers extends Transform {
-    constructor(private limit?: number) {
-        super({ objectMode: true })
-    }
-    private _numberArray: number[] = [];
-
-    _transform(chunk: any, encoding: BufferEncoding, callback: TransformCallback): void {
-        if (this._numberArray.length < this.limit) {
-            const number = typeof chunk === 'object' ? JSON.stringify(chunk) : chunk.toString();
-            if (!this._numberArray.includes(number)) {
-                this._numberArray.push(number);
-                this.push(chunk);
-            }
-            callback();
-        }
-        else {
-            this.push(null);
-        }
-    }
-}
-
-class OutputNumbers extends Writable {
-    constructor() {
-        super({ objectMode: true })
-    }
-    _write(chunk: any, encoding: BufferEncoding, callback: TransformCallback): void {
-        process.stdout.write(chunk + "; ");
-        callback();
-    }
-    _final(): void {
-        process.stdout.write("\n");
-    }
-}
+import { outputRandomNumbersPipeline } from './Output_Random_Numbers_Pipeline.ts'
 
 function getArgsValid(min: number, max: number, length: number): [number, number, number] {
     if (length < 1) {
@@ -66,7 +15,7 @@ function getArgsValid(min: number, max: number, length: number): [number, number
 }
 
 function getArgNumber(arg: number): number {
-    if (!_.isInteger(+arg)) {
+    if (!Number.isInteger(+arg)) {
         throw new Error(`Argument is not a valid integer: ${arg}`);
     }
     return arg;
@@ -83,21 +32,21 @@ async function displayRandomNumbers(length: number, min?: number, max?: number):
     const DEFAULT_MAX = 49;
     const DEFAULT_LENGTH = 7;
     const DEFAULT_VALUES = [
-        config.has('min') ? config.get<number>('min') : DEFAULT_MIN,
-        config.has('max') ? config.get<number>('max') : DEFAULT_MAX,
-        config.has('amount') ? config.get<number>('amount') : DEFAULT_LENGTH
+        config.has('min') ? Number(config.get<number>('min')) : DEFAULT_MIN,
+        config.has('max') ? Number(config.get<number>('max')) : DEFAULT_MAX,
+        config.has('amount') ? Number(config.get<number>('amount')) : DEFAULT_LENGTH
     ];
     const [validatedMin, validatedMax, validatedLength] = validateAndSetDefaults(min, max, length, DEFAULT_VALUES);
     const possibleRange = validatedMax - validatedMin + 1;
     if (validatedLength > possibleRange) {
         throw new Error(`length is greater than the range between min and max: ${validatedLength} > ${possibleRange}`);
     }
+    try {
+        await outputRandomNumbersPipeline(validatedLength, validatedMin, validatedMax);
+    } catch (error) {
+        console.error(error);
+    }
 
-    await pipeline(
-        new NumbersStream(validatedMin, validatedMax),
-        new UniqueNumbers(validatedLength),
-        new OutputNumbers()
-    )
 }
 
 // Test 1: Basic functionality
