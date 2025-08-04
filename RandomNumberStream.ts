@@ -2,60 +2,56 @@ import { Readable } from "node:stream";
 import _ from 'lodash'
 import config from 'config'
 
+
+function getParam(configPath: string, fallback: number): number {
+    const numberFromConfig = config.has(configPath) ? Number(config.get(configPath)): Number.NaN;
+    return numberFromConfig ?? fallback;
+}
+
 export default class RandomNumberStream extends Readable {
-
-    constructor(private amount: number, private min?: number, private max?: number, private isUnique?: boolean, options?: any) {
-        super(options);
-        this.validateAndSetDefaults();
-    }
-
-    private DEFAULT_MIN = 1;
-    private DEFAULT_MAX = 49;
-    private DEFAULT_LENGTH = 7;
-
-    private DEFAULT_VALUES = [
-        config.has('default_min') ? config.get<number>('default_min') : this.DEFAULT_MIN, 
-        config.has('default_max') ? config.get<number>('default_max') : this.DEFAULT_MAX, 
-        config.has('default_length') ? config.get<number>('default_length') : this.DEFAULT_LENGTH
+    private static DEFAULT_MIN = 1;
+    private static DEFAULT_MAX = 49;
+    private static DEFAULT_LENGTH = 7;
+ 
+    private static DEFAULT_VALUES = [
+        getParam('min', this.DEFAULT_MIN),
+        getParam('max', this.DEFAULT_MAX),
+        getParam('length', this.DEFAULT_LENGTH),
     ];
-    private IS_UNIQUE = this.isUnique ?? false;
-
-    private numberArray: number[] = [];
-    private validatedLength: number;
-    private validatedMin: number;
-    private validatedMax: number;
-
-    private validateAndSetDefaults(): void {
-        const args = [this.min, this.max, this.amount];
-        const defaultValues = this.DEFAULT_VALUES;
-        const [min, max, length] = args.map((arg, i) => arg || arg === 0 ? getArgNumber(arg) : defaultValues[i]);
-        const [checkedMin, checkedMax, checkedLength] = getArgsValid(min, max, length, this.IS_UNIQUE);
-        this.validatedMin = checkedMin;
-        this.validatedMax = checkedMax;
-        this.validatedLength = checkedLength;
+ 
+    constructor(private amount: number = RandomNumberStream.DEFAULT_VALUES[2],
+                private min: number = RandomNumberStream.DEFAULT_VALUES[0],
+                private max: number = RandomNumberStream.DEFAULT_VALUES[1], private isUnique: boolean = false, options?: any) {
+        super(options);
+        getArgsValid(this.min, this.max, this.amount, this.isUnique)
     }
+    private numberArray: number[] = [];
 
     _read(): void {
-        if (this.validatedLength <= 0) {
+        if (this.amount <= 0) {
             this.push(null);
         } else {
             let number: number;
-            if (!this.IS_UNIQUE) {
-                number = _.random(this.validatedMin, this.validatedMax);
+            if (!this.isUnique) {
+                number = _.random(this.min, this.max);
             }
             else {
                 do {
-                    number = _.random(this.validatedMin, this.validatedMax);
+                    number = _.random(this.min, this.max);
                 } while (this.numberArray.includes(number));
             }
             this.numberArray.push(number);
-            this.validatedLength--;
+            this.amount--;
             this.push(number + "; ");
         }
     }
 }
-
-function getArgsValid(min: number, max: number, length: number, isUnique: boolean) : [number, number, number] {
+ 
+function getArgsValid(min: number, max: number, length: number, isUnique: boolean) {
+    const nonIntegerIndex = [min, max, length].findIndex(i=>!Number.isInteger(i));
+    if (nonIntegerIndex > -1 ) {
+        throw new Error(`${['min','max','length'][nonIntegerIndex]} is not integer value`);
+    }
     if (length < 1) {
         throw new Error(`length is less than 1: ${length}`);
     }
@@ -69,13 +65,4 @@ function getArgsValid(min: number, max: number, length: number, isUnique: boolea
     if (possibleRange < length && isUnique) {
         throw new Error(`length is greater than the range between min and max: ${length} > ${possibleRange}`);
     }
-    return [min, max, length];
 }
-
-function getArgNumber(arg: number) : number {
-    if (!_.isInteger(arg)) {
-        throw new Error(`Argument is not a valid integer: ${arg}`);
-    }
-    return arg;
-}
-
