@@ -1,21 +1,21 @@
 import http from 'node:http';
-import { compute } from '../service/compute.ts';
+import { calculate } from '../service/compute.ts';
 
 function validateArgs(args: any) {
-   if (!args.operation || (!args.op1 && args.op1 !== 0) || (!args.op2 && args.op2 !== 0)) {
-      throw new Error(`Invalid arguments: argument 1 is ${args.operation}, argument 2 is ${args.op1}, argument 3 is ${args.op2}`);
+   if (args.operation === undefined || args.op1 === undefined || args.op2 === undefined) {
+      throw new Error(`Undefined argument found: argument 1 is ${args.operation}, argument 2 is ${args.op1}, argument 3 is ${args.op2}`);
    }
 }
 
 function validateOperation(operation: string) {
-   if (operation !== "+" && operation !== "-" && operation !== "*" && operation !== "/") {
-      throw new Error("Invalid operation");
+   if (typeof operation !== "string") {
+      throw new Error(`Operation is not a string: ${typeof operation}`);
    }
 }
 
 function validateOperands(op1: number, op2: number) {
    if (typeof op1 !== "number" || typeof op2 !== "number") {
-      throw new Error(`Operands are not numbers : operand 1 is ${typeof op1}, operand 2 is ${typeof op2}`);
+      throw new Error(`Operands are not both numbers: operand 1 is ${typeof op1}, operand 2 is ${typeof op2}`);
    }
 }
 
@@ -29,11 +29,11 @@ server.on("request", async (req, res) => {
    }
    try {
       const args = JSON.parse(data);
-      const { operation, op1, op2 } = args || {};
       validateArgs(args);
+      const { operation, op1, op2 } = args;
       validateOperation(operation);
       validateOperands(op1, op2);
-      const result = compute(operation, op1, op2);
+      const result = calculate(operation, op1, op2);
       res.statusCode = 200;
       res.end(result.toString());
    } catch (error) {
